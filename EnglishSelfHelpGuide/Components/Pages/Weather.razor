@@ -1,0 +1,114 @@
+﻿@page "/weather"
+
+
+@rendermode InteractiveServer
+<PageTitle>Home</PageTitle>
+
+<h3>Проверка слова</h3>
+
+<div>
+    <p>Исходное предложение: <strong>@currentSentence</strong></p>
+    <label>Введите слово для вставки (did, was, were):</label>
+    <input @bind="userInput" />
+    <button @onclick="CheckWord">Проверить</button>
+    <button @onclick="Refresh">Следующее предложение</button>
+</div>
+
+@if (resultMessage != null)
+{
+    <p>@resultMessage</p>
+}
+
+@if (isResultCorrect.HasValue)
+{
+    <p>@(isResultCorrect.Value ? "Правильный ответ!" : "Неправильный ответ.")</p>
+}
+
+
+@code {
+    
+    private string[] sentences = {
+        "how _____ you get here?","what ____ you doing when they arrived?","she ___ not support my idea."," She ____ very happy yesterday.","They ____ excited about the trip.","___ you finish your homework?","He ___ at the park in the morning.","We ____ not ready for the test.","___ she call you last night?","The movie ___ interesting to watch.",
+"They ____ playing football all afternoon.","___ he really say that?","My mother ___ a great dancer in her youth.","We ____ at the beach last summer.","___ you enjoy the concert?","The weather ___ very cold yesterday.","The children ____ very tired after the trip.","___ she go to the store today?","It ___ an amazing experience.","The students ____ working on their project all day.","___ you see the new movie?","My father ___ an excellent cook.","They ____ in London last winter."
+    };
+
+    private int currentIndex = 0; 
+    private string currentSentence => sentences[currentIndex];
+
+    private string[] wordsToCheck = { "did", "was", "were" };
+    private string? userInput;
+    private string? resultMessage;
+    private bool? isResultCorrect;
+
+   
+    private void Refresh()
+    {
+        currentIndex = (currentIndex + 1) % sentences.Length;
+        userInput = null;
+        resultMessage = null;
+        isResultCorrect = null;
+    }
+
+    private void CheckWord()
+    {
+        if (string.IsNullOrWhiteSpace(userInput))
+        {
+            resultMessage = "Пожалуйста, введите слово.";
+            isResultCorrect = null;
+            return;
+        }
+
+        
+        if (Array.Exists(wordsToCheck, word => word.Equals(userInput, StringComparison.OrdinalIgnoreCase)))
+        {
+          
+            string expectedSentence = "";
+            if (currentSentence.Contains("_____"))
+            {
+                expectedSentence = currentSentence.Replace("_____", userInput);
+            }
+            else if (currentSentence.Contains("____"))
+            {
+                expectedSentence = currentSentence.Replace("____", userInput);
+            }
+            else if (currentSentence.Contains("___"))
+            {
+                expectedSentence = currentSentence.Replace("___", userInput);
+            }
+            else
+            {
+                
+                expectedSentence = currentSentence;
+            }
+
+          
+            string normalizedExpected = expectedSentence.Trim().ToLower();
+
+           
+            string[] correctAnswers = {
+                "how did you get here?",
+                "what were you doing when they arrived?",
+                "she did not support my idea.","she was very happy yesterday.","they were excited about the trip.","did you finish your homework?","he was at the park in the morning.","we were not ready for the test.","did she call you last night?","the movie was interesting to watch.",
+"they were playing football all afternoon.","did he really say that?","my mother was a great dancer in her youth.","we were at the beach last summer.","did you enjoy the concert?","the weather was very cold yesterday.","the children were very tired after the trip.","did she go to the store today?","it was an amazing experience.","the students were working on their project all day.","did you see the new movie?","my father was an excellent cook.","they were in London last winter."
+            };
+
+           
+            isResultCorrect = false;
+            foreach (var answer in correctAnswers)
+            {
+                if (normalizedExpected == answer)
+                {
+                    isResultCorrect = true;
+                    break;
+                }
+            }
+
+            resultMessage = $"Результат: {expectedSentence}";
+        }
+        else
+        {
+            resultMessage = "Введено неверное слово. Пожалуйста, введите одно из следующих: did, was, were.";
+            isResultCorrect = null;
+        }
+    }
+}

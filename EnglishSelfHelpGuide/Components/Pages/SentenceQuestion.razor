@@ -1,0 +1,155 @@
+﻿@page "/sentencequestions"
+@rendermode InteractiveServer
+@using EnglishSelfHelpGuide.Models
+@using static EnglishSelfHelpGuide.Components.Pages.SentenceQuestion
+<PageTitle>Home</PageTitle>
+
+<h3>Проверка слова</h3>
+
+<div>
+    <p>Исходное предложение: <strong>@currentQuestion.CurrentSentence</strong></p>
+    <label>Введите слово для вставки (did, was, were):</label>
+    <input @bind="userInput" />
+    <button @onclick="CheckAnswer">Проверить</button>
+    <button @onclick="NextQuestion">Следующее предложение</button>
+</div>
+
+@if (resultMessage != null)
+{
+    <p>@resultMessage</p>
+}
+
+@if (isResultCorrect.HasValue)
+{
+    <p>@(isResultCorrect.Value ? "Правильный ответ!" : "Неправильный ответ.")</p>
+}
+
+@code {
+   
+    public interface IQuestion
+    {
+        string CurrentSentence { get; }
+        string[] GetCorrectAnswers();
+        string FillBlank(string word);
+        bool IsAnswerCorrect(string answer);
+    }
+
+    public interface IAnswerChecker
+    {
+        bool CheckAnswer(IQuestion question, string answer);
+    }
+
+    
+
+    
+    public class AnswerChecker : IAnswerChecker
+    {
+        public bool CheckAnswer(IQuestion question, string answer)
+        {
+            return question.IsAnswerCorrect(answer);
+        }
+    }
+
+    
+    public class WeatherQuiz
+    {
+        private List<IQuestion> questions;
+        private int currentIndex = 0;
+        private IAnswerChecker answerChecker;
+
+        public WeatherQuiz(List<IQuestion> questions, IAnswerChecker checker)
+        {
+            this.questions = questions;
+            this.answerChecker = checker;
+        }
+
+        public IQuestion CurrentQuestion => questions[currentIndex];
+
+        public void Next()
+        {
+            currentIndex = (currentIndex + 1) % questions.Count;
+        }
+
+        public bool CheckAnswer(string answer)
+        {
+            return answerChecker.CheckAnswer(CurrentQuestion, answer);
+        }
+    }
+
+    
+    private WeatherQuiz quiz;
+    private string[] sentences = {
+        "how _____ you get here?",
+        "what ____ you doing when they arrived?",
+        "she ___ not support my idea.",
+        "She ____ very happy yesterday.",
+        "They ____ excited about the trip.",
+        "___ you finish your homework?",
+        "He ___ at the park in the morning.",
+        "We ____ not ready for the test.",
+        "___ she call you last night?",
+        "The movie ___ interesting to watch.",
+        "They ____ playing football all afternoon.",
+        "___ he really say that?",
+        "My mother ___ a great dancer in her youth.",
+        "We ____ at the beach last summer.",
+        "___ you enjoy the concert?",
+        "The weather ___ very cold yesterday.",
+        "The children ____ very tired after the trip.",
+        "___ she go to the store today?",
+        "It ___ an amazing experience.",
+        "The students ____ working on their project all day.",
+        "___ you see the new movie?",
+        "My father ___ an excellent cook.",
+        "They ____ in London last winter."
+    };
+
+    private string[] correctAnswers = {
+        "did", "was", "were", "was", "were", "did", "was", "were", "did", "was",
+        "were", "did", "was", "were", "did", "was", "were", "did", "was", "were", "did", "was", "were"
+    };
+
+    private string? userInput;
+    private string? resultMessage;
+    private bool? isResultCorrect;
+
+    private IQuestion currentQuestion => quiz.CurrentQuestion;
+
+    protected override void OnInitialized()
+    {
+        var questionsList = new List<IQuestion>();
+        for (int i = 0; i < sentences.Length; i++)
+        {
+            //questionsList.Add(new SentenceQuestion(sentences[i], new[] { correctAnswers[i] }));
+            questionsList.Add(new EnglishSelfHelpGuide.Models.SentenceQuestion(sentences[i], new[] { correctAnswers[i] }));
+
+        }
+        quiz = new WeatherQuiz(questionsList, new AnswerChecker());
+    }
+
+    private void NextQuestion()
+    {
+        quiz.Next();
+        userInput = null;
+        resultMessage = null;
+        isResultCorrect = null;
+    }
+
+    private void CheckAnswer()
+    {
+        if (string.IsNullOrWhiteSpace(userInput))
+        {
+            resultMessage = "Пожалуйста, введите слово.";
+            isResultCorrect = null;
+            return;
+        }
+
+        bool correct = quiz.CheckAnswer(userInput);
+        var expectedSentence = currentQuestion.FillBlank(userInput);
+        resultMessage = $"Результат: {expectedSentence}";
+        isResultCorrect = correct;
+    }
+}
+
+
+

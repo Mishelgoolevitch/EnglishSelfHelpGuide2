@@ -1,0 +1,67 @@
+﻿@page "/"
+@rendermode InteractiveServer
+<PageTitle>Home</PageTitle>
+
+<h3>Проверка слова</h3>
+
+<div>
+    <p>Исходная строка: <strong>How _______ you get here?</strong></p>
+    <label>Введите слово для вставки (did, was, were):</label>
+    <input @bind="userInput" />
+    <button @onclick="CheckWord">Проверить</button>
+</div>
+
+@if (resultMessage != null)
+{
+    <p>@resultMessage</p>
+}
+
+@if (isResultCorrect.HasValue)
+{
+    <p>@(isResultCorrect.Value ? "Правильный ответ!" : "Неправильный ответ.")</p>
+}
+
+@code {
+    private string originalString = "How you get here?";
+    private string[] wordsToCheck = { "did", "was", "were" };
+    private string? userInput;
+    private string? resultString;
+    private string? resultMessage;
+    private bool? isResultCorrect;
+
+    private void CheckWord()
+    {
+        if (string.IsNullOrWhiteSpace(userInput))
+        {
+            resultMessage = "Пожалуйста, введите слово.";
+            isResultCorrect = null;
+            return;
+        }
+
+        if (Array.Exists(wordsToCheck, word => word.Equals(userInput, StringComparison.OrdinalIgnoreCase)))
+        {
+            
+            resultString = originalString.Replace("you", $"{userInput} you");
+            resultMessage = $"Результат: {resultString}";
+
+           
+            string normalizedResult = resultString.Trim().ToLower();
+            string expected = "how did you get here?";
+
+           
+            if (normalizedResult == expected)
+            {
+                isResultCorrect = true;
+            }
+            else
+            {
+                isResultCorrect = false;
+            }
+        }
+        else
+        {
+            resultMessage = "Введено неверное слово. Пожалуйста, введите одно из следующих: did, was, were.";
+            isResultCorrect = null;
+        }
+    }
+}

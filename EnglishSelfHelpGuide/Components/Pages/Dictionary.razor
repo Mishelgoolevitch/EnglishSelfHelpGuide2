@@ -1,0 +1,91 @@
+﻿@page "/Dictionary"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using EnglishSelfHelpGuide.Models
+@using EnglishSelfHelpGuide
+@using EnglishSelfHelpGuide.Data
+@inject EnglishSelfHelpGuide.Models.IWordService WordService
+@inject ApplicationDbContext DbContext
+@inject IJSRuntime JS
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<div class="container mt-4">
+    <h3>Словарь слов</h3>
+
+    @if (words == null)
+    {
+        <p class="text-center">Загрузка...</p>
+    }
+    else
+    {
+        <table class="table table-striped table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th>Слово</th>
+                    <th>Значение</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (words.Any())
+                {
+                    foreach (var word in words)
+                    {
+                        <tr>
+                            <td>@word.EnglishWord</td>
+                            <td>@word.RussianMeaning</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="2" class="text-center">Словарная запись пуста.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <h3 class="mt-4">Добавить слово</h3>
+    <div class="form-group">
+        <input type="text" class="form-control" @bind="newWord" placeholder="Слово" />
+    </div>
+    <div class="form-group">
+        <input type="text" class="form-control" @bind="newMeaning" placeholder="Значение" />
+    </div>
+    <button class="btn btn-primary" @onclick="AddWord">Добавить</button>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+
+
+@code {
+  
+    private IEnumerable<Word> words;
+
+    public Dictionary(IEnumerable<Word> words)
+    {
+        this.words = words;
+    }
+   private int newId;
+    private string? newWord;
+    private string? newMeaning;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(1000);
+        words = await WordService.GetAllWordsAsync();
+    }
+
+    private async Task AddWord()
+    {
+        var word = new Word {EnglishWord = newWord, RussianMeaning = newMeaning };
+        await WordService.AddWordAsync(word);
+        words = await WordService.GetAllWordsAsync(); 
+    }
+}

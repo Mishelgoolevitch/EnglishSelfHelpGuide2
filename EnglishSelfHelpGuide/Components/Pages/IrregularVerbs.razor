@@ -1,0 +1,82 @@
+﻿@page "/Irregular-verbs"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using EnglishSelfHelpGuide.Models
+@using EnglishSelfHelpGuide
+@using EnglishSelfHelpGuide.Data
+@inject EnglishSelfHelpGuide.Models.IWordService WordService
+@inject ApplicationDbContext DbContext
+@inject IJSRuntime JS
+
+
+@inject EnglishSelfHelpGuide.Models.IIrregularVerbService IrregularVerbService
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<div class="container mt-4">
+    <h3>Неправильные Глаголы</h3>
+
+    <table class="table table-striped table-hover">
+        <thead class="thead-light">
+            <tr>
+                <th>Основная Форма</th>
+                <th>Прошедшее Время</th>
+                <th>Третья Форма</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var verb in irregularVerbs)
+            {
+                <tr>
+                    <td>@verb.BaseForm</td>
+                    <td>@verb.PastSimple</td>
+                    <td>@verb.PastParticiple</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h3 class="mt-4">Добавить Неправильный Глагол</h3>
+
+    <div class="form-group">
+        <input type="text" class="form-control" @bind="newBaseForm" placeholder="Основная Форма" />
+    </div>
+    <div class="form-group">
+        <input type="text" class="form-control" @bind="newPastSimple" placeholder="Прошедшее Время" />
+    </div>
+    <div class="form-group">
+        <input type="text" class="form-control" @bind="newPastParticiple" placeholder="Третья Форма" />
+    </div>
+    <button class="btn btn-primary" @onclick="AddIrregularVerb">Добавить</button>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+
+@code {
+    private IEnumerable<IrregularVerb> irregularVerbs;
+
+    public IrregularVerbs(IEnumerable<IrregularVerb> irregularVerbs)
+    {
+        this.irregularVerbs = irregularVerbs;
+    }
+
+    private string? newBaseForm;
+    private string? newPastSimple;
+    private string? newPastParticiple;
+
+    protected override async Task OnInitializedAsync()
+    {
+        irregularVerbs = await IrregularVerbService.GetAllIrregularVerbsAsync();
+    }
+
+    private async Task AddIrregularVerb()
+    {
+        var verb = new IrregularVerb { BaseForm = newBaseForm, PastSimple = newPastSimple, PastParticiple = newPastParticiple };
+        await IrregularVerbService.AddIrregularVerbAsync(verb);
+        irregularVerbs = await IrregularVerbService.GetAllIrregularVerbsAsync(); 
+    }
+}
